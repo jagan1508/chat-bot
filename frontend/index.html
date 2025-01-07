@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot UI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="chatbot-ui">
+    <div class="scroll-area">
+            {% block scroll%}{% endblock %}
+    </div>
+        <div class="prompt">
+            <form class="chat-message" id="chat-message" method="POST" action="/">
+                <input type="text" name="message" id="message-input" placeholder="Enter Your Prompt...">
+                <button class="button black" id="send-message">Send</button>  
+              </form>
+        </div>
+    </div>
+
+</body>
+</html>
