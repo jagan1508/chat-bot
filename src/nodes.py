@@ -140,7 +140,7 @@ def model_check_query(state:State)->dict[str,list[AIMessage]]:
     return {"messages": [query_checker.invoke({"messages": [state["messages"][-1]]})]}
 
 def model_get_schema(state:State):
-    model_get_schema=schema_prompt|ChatGroq(model="llama-3.3-70b-specdec",temperature=0).bind_tools([get_schema_tool],tool_choice="required")
+    model_get_schema=schema_prompt|ChatGroq(model="llama-3.3-70b-versatile",temperature=0).bind_tools([get_schema_tool],tool_choice="required")
     return {
         "messages":[model_get_schema.invoke({"messages":state["messages"]})]
     }
@@ -186,13 +186,13 @@ db=load_database(username="root",
                     host="localhost",
                     database="jagandb")
 
-toolkit= SQLDatabaseToolkit(db=db, llm=ChatGroq(model="llama-3.3-70b-specdec"))
+toolkit= SQLDatabaseToolkit(db=db, llm=ChatGroq(model="llama-3.3-70b-versatile"))
 tools= toolkit.get_tools()
 list_tables_tool=next(tool for tool in tools if tool.name=="sql_db_list_tables")    
 get_schema_tool=next(tool for tool in tools if tool.name=="sql_db_schema")
 
 query_check_prompt=ChatPromptTemplate.from_messages([("system",QUERY_CHECK_INSTRUCTION),("placeholder","{messages}")])
-query_checker=query_check_prompt | ChatGroq(model="llama-3.3-70b-specdec",temperature=0).bind_tools([db_query_tool],tool_choice="required")
+query_checker=query_check_prompt | ChatGroq(model="llama-3.3-70b-versatile",temperature=0).bind_tools([db_query_tool],tool_choice="required")
 
 query_gen_prompt=ChatPromptTemplate.from_messages([("system",QUERY_GEN_INSTRUCTION),("placeholder","{messages}")])
 query_gen_chain=query_gen_prompt | ChatGroq(model="llama-3.3-70b-versatile")
