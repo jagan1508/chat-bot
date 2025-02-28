@@ -35,12 +35,12 @@ def build_graph():
     memory = MemorySaver()
     graph=builder.compile(checkpointer=memory)
     return graph
+
 graph=build_graph()
-print(graph)
-os.system("mkdir -p state_db && [ -f state_db/example.db ]")
-while True:
-    user_query=input("Enter your query: ")
-    if user_query=="stop":
-        break
-    response=graph.invoke({"messages":[("user", user_query)]},config=config)
-    print(response["messages"][-1].content)
+
+#while True:
+#    user_query=input("Enter your query: ")
+#    if user_query=="stop":
+#        break
+#    response=graph.invoke({"messages":[("user", user_query)]},config=config)
+#    print(response["messages"][-1].content)
