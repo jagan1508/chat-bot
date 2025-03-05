@@ -18,6 +18,8 @@ def set_variables():
     os.environ["LANGCHAIN_TRACING_V2"]="true"
     os.environ["LANGCHAIN_PROJECT"]="sql-llm-agent-tracker"
 
+set_variables()
+
 def load_db(username : str, password: str, host: str, database: str):
     db = SQLDatabase.from_uri(f"mysql+pymysql://{username}:{password}@{host}/{database}",sample_rows_in_table_info = 3)
     #print(db.dialect)

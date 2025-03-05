@@ -114,7 +114,8 @@ CATEGORY_DECIDING_PROMPT = """System
     """
     
 NORMAL_INSTRUCTION="""Answer the message in the most appropriate and general way to the given message. 
-    Maintain a neutal and a formal tone . If anything inappropriate is encountered answer with 'Can't answer this ask something different' """
+    Maintain a neutal and a formal tone . If anything inappropriate is encountered answer with 
+    'Can't answer this ask something different' """
 
 
 MAX_ATTEMPTS_DEFAULT = 1
