@@ -21,22 +21,28 @@ class Query(BaseModel):
         return(f"Wrong SQL query:\n{self.statement}\n\n"
     f"The reasoning you used to create that query was:\n{self.reasoning}\n\n"
     f"And this is the error you got when excuted it: {self.error}")
-        
+
+class GeneralMessage(BaseModel):
+    human: str = Field("",description="Human message")
+    llm: str = Field("",description="answer by LLM")        
+
 class InputState(TypedDict):
   question: str
   max_attempts: int
+  general_message: Annotated[List[GeneralMessage],operator.add]
 
 class OutputState(TypedDict):
   answer: str
   error_message: str
+  general_message: Annotated[List[GeneralMessage],operator.add]
   
 class OverallState(TypedDict):
     question: str
     max_attempts: int
-    attempts: Annotated[int,operator.add]
+    attempts: int
     answer: str
     error_message: str
-    tables_info: str
+    tables_info: str =''
     reasoning: str
     queries: Annotated[List[Query], operator.add]
 

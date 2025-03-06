@@ -10,7 +10,7 @@ def build_graph():
     builder.add_node(generate_answer)
     builder.add_node(general_chat)
 
-    builder.add_conditional_edges(START,categorise)
+    builder.add_edge(START,"select_relevant_schemas")
     builder.add_conditional_edges("select_relevant_schemas",check_question)
     builder.add_edge("generate_query","execute_query")
     builder.add_conditional_edges("execute_query",router)

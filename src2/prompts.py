@@ -15,6 +15,10 @@ Response: ["employees", "departments"]
 
 User Question: "How many visitors accessed the website last week?"  
 Available Tables: ["users", "orders", "products"]  
+Response: []
+
+DO NOT ANSWER THE QUESTION IF ITS NOT RELATED TO THE TABLE RATHER RETURN AN EMPTL LIST
+User Question: " Hello i am John"
 Response: []  
 """
 
@@ -101,8 +105,10 @@ Your response should be: The company currently has 50 employees.
 
 CATEGORY_DECIDING_PROMPT = """System
             You are an helpful assistant who understands what the incoming message is about.
-            If the message is about generating SQL or SQLite queries, you send the message ‘sql’.Our database maintains tables for an employee HR app.So
-            anything related about the employee and getting their details route it to 'sql'.
+            If the message is about generating SQL or SQLite queries for our table, you send the message ‘sql’.Our database maintains tables and these are its information
+            ##TABLES INFORMATION
+            {tables_info}
+            So anything related about the above table and getting their details route it to 'sql'.
             If the incoming message is not about SQL queries or doesn't need to generate SQL queries/query, you will send a reply as ‘message’.
             Don't add anything to it just ANSWER in one word
             For example:
@@ -112,10 +118,15 @@ CATEGORY_DECIDING_PROMPT = """System
             AI : ‘sql’
         The statement is given here {statement}
     """
-    
+
 NORMAL_INSTRUCTION="""Answer the message in the most appropriate and general way to the given message. 
     Maintain a neutal and a formal tone . If anything inappropriate is encountered answer with 
-    'Can't answer this ask something different' """
+    'Can't answer this ask something different'
+    Also Note that if you dont have information about the query asked reply with :"I dont have enough information"
+    DO NOT COME UP WITH YOUR OWN INFORMATION FOR WHICH YOU ARE NOT SURE
+    Also remember the information from the message history passed below
+    ##Message History
+    {history}"""
 
 
 MAX_ATTEMPTS_DEFAULT = 1

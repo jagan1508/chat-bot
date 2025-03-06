@@ -5,7 +5,7 @@ from fastapi import FastAPI
 import uvicorn
 
 """config = {"configurable": {"thread_id": "1"}}
-result=graph.invoke({"question":"How many employees are present","max_attempts":2},config=config)
+result=graph.invoke({"question":"I like whales","max_attempts":2},config=config)
 print("answer is ",result["answer"])"""
 app = FastAPI()
 
@@ -13,4 +13,5 @@ app = FastAPI()
 def ask(text: str):
     config = {"configurable": {"thread_id": "1"}}
     result= graph.invoke({"question":text,"max_attempts":2},config=config)
-    return result
+    #print("This is the result :",result)
+    return result["answer"]
