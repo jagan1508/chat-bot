@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        input, button { padding: 10px; margin: 10px; }
+        #response { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Chat with FastAPI Bot</h2>
+    <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Type your message..." required>
+        <button type="submit">Ask</button>
+    </form>
+    <div id="response"></div>
+
+    <script>
+        document.getElementById("chat-form").addEventListener("submit", async function(event) {
+            event.preventDefault(); // Prevent form from reloading the page
+            
+            const userInput = document.getElementById("user-input").value;
+            const responseDiv = document.getElementById("response");
+            responseDiv.innerHTML = "Waiting for response...";
+
+            try {
+                const response = await fetch("http://127.0.0.1:3001/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: userInput })
+                });
+
+                if (!response.ok) throw new Error("Server error");
+
+                const data = await response.json();
+                responseDiv.innerHTML = `Chatbot: ${data.answer}`;
+            } catch (error) {
+                responseDiv.innerHTML = "Error: Unable to reach chatbot!";
+            }
+        });
+    </script>
+</body>
+</html>
