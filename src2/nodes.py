@@ -54,31 +54,38 @@ def select_relevant_schemas(state: InputState) -> OverallState:
     instruction=SystemMessage(content=SELECT_RELEVANT_TABLES_INSTRUCTION.format(table_names=table_names))
     prompt=[instruction]+[HumanMessage(content=question)]
     #print(prompt)
-    model=ChatGroq(model="llama-3.3-70b-versatile")
+    model=ChatGroq(model="qwen-2.5-32b")
     relevant_tables=model.invoke(prompt)
     #print("relevant tables ",relevant_tables.content)
     relevant_tables=parse(relevant_tables.content)
     
     if not relevant_tables:
-        return {"error_message": INVALID_QUESTION_ERROR}
+        return {"error_message": INVALID_QUESTION_ERROR,"tables_info":"No relevant tables"}
     tables_info=db.get_table_info(relevant_tables)
     #print(tables_info)
     
-    return {"tables_info": tables_info, 'attempts':1 , **state}
+    return {"tables_info": tables_info, 'attempts':0 , 'answer':'','error_message':'','reasoning':''}
 
 def generate_query(state: OverallState) -> OverallState:
     question= state["question"]
     tables_info=state["tables_info"]
     queries=state.get("queries")
+    attempts=state.get("attempts")
     
-    if not queries:
-        instructions= (GENERATE_QUERY_INSTRUCTIONS.format(info=tables_info))
+    print("past queries",queries)
+    print("question",question)
+    if queries:  
+        if queries[-1].is_valid ==True:
+            instructions= (GENERATE_QUERY_INSTRUCTIONS.format(info=tables_info, queries=queries))
+        else:
+            instructions= (FIX_QUERY_INSTRUCTIONS.format(info=tables_info, error_info=queries[-1].error_info))
     else:
-        instructions= (FIX_QUERY_INSTRUCTIONS.format(info=tables_info, error_info=queries[-1].error_info))
+        instructions= (GENERATE_QUERY_INSTRUCTIONS.format(info=tables_info,queries=queries))
+    
     
     generator_prompt=[SystemMessage(content=instructions)]+[HumanMessage(content=question)]
 
-    generator_model=ChatGroq(model="llama-3.3-70b-versatile").with_structured_output(GenQueryResponse)
+    generator_model=ChatGroq(model="deepseek-r1-distill-llama-70b").with_structured_output(GenQueryResponse)
     generator_response=generator_model.invoke(generator_prompt)
     #print("generated statement ",generator_response.statement)
     #print("generated reasoning ",generator_response.reasoning)
@@ -87,7 +94,7 @@ def generate_query(state: OverallState) -> OverallState:
     checker_prompt=([SystemMessage(content=QUERY_CHECK_INSTRUCTION)]+
                     [AIMessage(content=f"SQLite query: {generator_response.statement}\n Reasoning:{generator_response.reasoning}")]
                     )
-    checker_model=ChatGroq(model="llama-3.3-70b-versatile").with_structured_output(GenQueryResponse)
+    checker_model=ChatGroq(model="llama-3.3-70b-specdec").with_structured_output(GenQueryResponse)
     checker_response= checker_model.invoke(checker_prompt)
     
     corrected=generator_response.statement != checker_response.statement
@@ -100,23 +107,28 @@ def generate_query(state: OverallState) -> OverallState:
     #print(checker_response.statement,final_reasoning)
     query=Query(statement=checker_response.statement, reasoning=final_reasoning)
     
-    return {"queries":[query]}
+    return {"queries":[query],"attempts":state["attempts"]+1}
 
 def execute_query(state: OverallState)-> OverallState:
     attempts=state["attempts"]
     max_attempts=state["max_attempts"]
     query=state["queries"][-1]
+    print("attempts",attempts)
+    print("max_attempts",max_attempts)
+    if attempts >max_attempts:
+        return {"error_message": REACH_OUT_MAX_ATTEMPTS_ERROR}
     #print("In executing this query :", query)
     try:
         query_result=db.run(query.statement)
         #print("this is the result on running this query ", query_result)
-        query.result=query_result
+        if query_result:
+            query.result=query_result
     except Exception as e:
-        query.result=str(e)
-        query.is_valid=False
-        if attempts >=max_attempts:
-            return {"error_message": REACH_OUT_MAX_ATTEMPTS_ERROR}
-    return {"attempts": 1}
+        print("Exception")
+        print(e)
+        query.result="ERROR:"+str(e)
+        query.is_valid=False 
+    return {"attempts": state["attempts"]}
 
 def generate_answer(state: OverallState) -> OutputState:
     if error_message := state.get("error_message"):
@@ -135,17 +147,42 @@ def generate_answer(state: OverallState) -> OutputState:
 
 def general_chat(state: InputState) -> OutputState:
     statement=state['question']
-    general_prompt=ChatPromptTemplate.from_messages([("system",NORMAL_INSTRUCTION),("placeholder","{messages}")])
+    message_history=state["general_message"]
+    pack=GeneralMessage()
+    pack.human=statement
+    chat_instruction=NORMAL_INSTRUCTION.format(history=message_history)
+    general_prompt=ChatPromptTemplate.from_messages([("system",chat_instruction),("placeholder","{messages}")])
     general_task_llm=general_prompt|ChatGroq(model="mixtral-8x7b-32768")
     response=general_task_llm.invoke({"messages":[statement]})
-    #print("response from general chat: ",response.content)
-    return {"answer":response.content}
+    #print("response from general chat: ",response.human)
+    #print("response from general chat: ",response.llm)
+    pack.llm=response.content
+    
+    
+    return {"answer":response.content,"general_message":[pack]}
 
+def is_related(state):
+    statement=state['question']
+    tables_info=state["tables_info"]
+    #print(tables_info)
+    #print(statement)
+    category_deciding_instruction=SystemMessage(content=CATEGORY_DECIDING_PROMPT.format(statement=statement,tables_info=tables_info))
+    category_deciding_llm=ChatGroq(model="mixtral-8x7b-32768")
+    response=category_deciding_llm.invoke([category_deciding_instruction])
+    print(response.content)
+    if response.content.lower()=="sql" or "sql" in response.content.lower():
+        return True
+    else:
+        #print(statement)
+        return False
 
-def check_question(state: OverallState) -> Literal["generate_query","generate_answer"]:
-    if state.get("error_message") == INVALID_QUESTION_ERROR:
-        return "generate_answer"
-    return "generate_query"
+def check_question(state: OverallState) -> Literal["generate_query","generate_answer","general_chat"]:
+    if is_related(state):        
+        if state.get("error_message") == INVALID_QUESTION_ERROR:
+            return "generate_answer"
+        return "generate_query"
+    else:
+        return "general_chat"
 
 def router(state:OverallState) -> Literal["generate_query","generate_answer"]:
     query=state["queries"][-1]
@@ -155,18 +192,6 @@ def router(state:OverallState) -> Literal["generate_query","generate_answer"]:
     else:
         return "generate_query"
     
-def categorise(state: InputState) -> Literal["select_relevant_schemas","general_chat"]:
-    statement=state['question']
-    #print(statement)
-    category_deciding_instruction=SystemMessage(content=CATEGORY_DECIDING_PROMPT.format(statement=statement))
-    category_deciding_llm=ChatGroq(model="mixtral-8x7b-32768")
-    response=category_deciding_llm.invoke([category_deciding_instruction])
-    #print(response.content)
-    if response.content=="sql":
-        return "select_relevant_schemas"
-    else:
-        #print(statement)
-        return "general_chat"
 
 
     
