@@ -64,7 +64,7 @@ def select_relevant_schemas(state: InputState) -> OverallState:
     tables_info=db.get_table_info(relevant_tables)
     #print(tables_info)
     
-    return {"tables_info": tables_info, 'attempts':0 , 'answer':'','error_message':'','reasoning':''}
+    return {"tables_info": tables_info, 'attempts':0 , 'answer':'','error_message':'','reasoning':'','answer':''}
 
 def generate_query(state: OverallState) -> OverallState:
     question= state["question"]
@@ -72,8 +72,8 @@ def generate_query(state: OverallState) -> OverallState:
     queries=state.get("queries")
     attempts=state.get("attempts")
     
-    print("past queries",queries)
-    print("question",question)
+    #print("past queries",queries)
+    #print("question",question)
     if queries:  
         if queries[-1].is_valid ==True:
             instructions= (GENERATE_QUERY_INSTRUCTIONS.format(info=tables_info, queries=queries))
@@ -113,8 +113,8 @@ def execute_query(state: OverallState)-> OverallState:
     attempts=state["attempts"]
     max_attempts=state["max_attempts"]
     query=state["queries"][-1]
-    print("attempts",attempts)
-    print("max_attempts",max_attempts)
+    #print("attempts",attempts)
+    #print("max_attempts",max_attempts)
     if attempts >max_attempts:
         return {"error_message": REACH_OUT_MAX_ATTEMPTS_ERROR}
     #print("In executing this query :", query)
@@ -123,9 +123,11 @@ def execute_query(state: OverallState)-> OverallState:
         #print("this is the result on running this query ", query_result)
         if query_result:
             query.result=query_result
+        else:
+            query.result="No result found"
     except Exception as e:
         print("Exception")
-        print(e)
+        #print(e)
         query.result="ERROR:"+str(e)
         query.is_valid=False 
     return {"attempts": state["attempts"]}
@@ -147,6 +149,7 @@ def generate_answer(state: OverallState) -> OutputState:
 
 def general_chat(state: InputState) -> OutputState:
     statement=state['question']
+    print("helleooeoe")
     message_history=state["general_message"]
     pack=GeneralMessage()
     pack.human=statement
@@ -169,7 +172,7 @@ def is_related(state):
     category_deciding_instruction=SystemMessage(content=CATEGORY_DECIDING_PROMPT.format(statement=statement,tables_info=tables_info))
     category_deciding_llm=ChatGroq(model="mixtral-8x7b-32768")
     response=category_deciding_llm.invoke([category_deciding_instruction])
-    print(response.content)
+    #print(response.content)
     if response.content.lower()=="sql" or "sql" in response.content.lower():
         return True
     else:
@@ -178,8 +181,8 @@ def is_related(state):
 
 def check_question(state: OverallState) -> Literal["generate_query","generate_answer","general_chat"]:
     if is_related(state):        
-        if state.get("error_message") == INVALID_QUESTION_ERROR:
-            return "generate_answer"
+        if state.get("error_message") == INVALID_QUESTION_ERROR :
+            return "general_chat"
         return "generate_query"
     else:
         return "general_chat"
@@ -187,10 +190,10 @@ def check_question(state: OverallState) -> Literal["generate_query","generate_an
 def router(state:OverallState) -> Literal["generate_query","generate_answer"]:
     query=state["queries"][-1]
     #print("\nresult of query",query.result)
-    if query.result:
-        return "generate_answer"
-    else:
+    if query.result.startswith("ERROR"):
         return "generate_query"
+    else:
+        return "generate_answer"
     
 
 
