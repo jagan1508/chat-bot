@@ -20,13 +20,13 @@ def set_variables():
 
 set_variables()
 
-def load_db(username : str, password: str, host: str, database: str):
-    db = SQLDatabase.from_uri(f"mysql+pymysql://{username}:{password}@{host}/{database}",sample_rows_in_table_info = 3)
+def load_db(username : str, password: str, host: str, port : str ,database: str):
+    db = SQLDatabase.from_uri(f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}",sample_rows_in_table_info = 3)
     #print(db.dialect)
     #print(db.get_usable_table_names())
     return db
 
-db=load_db(username="root", password="jagan2911", host="localhost",database="employeez")
+db=load_db(username="root", password="jagan2911", host="127.0.0.1",port="3307",database="employeez")
 import ast
 def parse(tables):
     result=ast.literal_eval(tables)
