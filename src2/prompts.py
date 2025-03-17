@@ -32,18 +32,18 @@ When generating the query:
 - Never select all columns from a table; only query the columns that are relevant to the question.
 - DO NOT include any DML statements (INSERT, UPDATE, DELETE, DROP, etc.) in your query.
 
-In addition to providing the SQLite query, include a brief explanation of your reasoning for constructing the query.
+In addition to providing the MYSQL query, include a brief explanation of your reasoning for constructing the query.
 """
 
 
 
 GENERATE_QUERY_INSTRUCTIONS = """
-You are a SQL expert with strong attention to detail.
+You are a SQL expert with strong attention to detail and give a response through function calling.
 Below is the information you have about the database, including the table schema and some row examples:
 
 {info}
 
-Please create a syntactically correct SQLite query to answer the user question below.
+Please create a syntactically correct MYSQL query to answer the user question below.
 """ + GENERAL_QUERY_INSTRUCTIONS
 
 
@@ -100,6 +100,9 @@ And this is the result you get:
 [(50,)]
 
 Your response should be: The company currently has 50 employees.
+
+Do not reveal any information about the query executed and your reply must be a black box (not revealing the internal working and results)
+
 
 """
 
