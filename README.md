@@ -25,6 +25,10 @@ The project depends on the following APIs:
 
 - **Python Version**: 3.10 (Ensure you have Python 3.10 installed on your system)
 - **pip**: Python package manager (comes pre-installed with Python 3.10)
+- **Createa .env file**: 
+            Variables: - GROQ_API_KEY
+                       - LANGCHAIN_API_KEY
+
 
 ### Installation Steps
 
