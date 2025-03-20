@@ -63,7 +63,7 @@ Please fix the query or create a new, syntactically correct SQLite query to answ
 
 QUERY_CHECK_INSTRUCTION = """
 You are a SQL expert with strong attention to detail.
-Below is a SQLite query statement along with a brief explanation of its construction.
+Below is a SQL query statement along with a brief explanation of its construction.
 Also make sure that it is the correct SQL statement generated
 
 Double-check the query for common mistakes, including:
