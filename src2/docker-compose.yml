@@ -6,6 +6,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: jagan2911
       MYSQL_DATABASE: employeez
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
     ports:
       - "3308:3306"
     volumes:
@@ -13,10 +14,10 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", "mysql -u root -pjagan2911 -D employeez -e 'SELECT 1'"]
       interval: 10s
       retries: 5
-      start_period: 20s
+      start_period: 40s
   chat-bot:
     image: chat-bot:latest
     container_name: test_chatbot
@@ -26,7 +27,7 @@ services:
     networks:
       - backend
     depends_on:
-      mysql :
+      mysql:
         condition: service_healthy
 networks:
   backend:

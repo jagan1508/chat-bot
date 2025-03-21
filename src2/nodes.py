@@ -26,7 +26,7 @@ def load_db(username : str, password: str, host: str, port : str ,database: str)
     #print(db.get_usable_table_names())
     return db
 
-db=load_db(username="root", password="jagan2911", host="mysqlserver",port="3306",database="employeez")
+db=load_db(username="root", password="jagan2911", host="localhost",port="3306",database="employeez")
 import ast
 def parse(tables):
     result=ast.literal_eval(tables)
@@ -42,7 +42,7 @@ def select_relevant_schemas(state: InputState) -> OverallState:
         state['max_attempts']=MAX_ATTEMPTS_DEFAULT
     table_names=db.get_usable_table_names()
     question= state['question']
-    toolkit= SQLDatabaseToolkit(db=db, llm=ChatGroq(model="mixtral-8x7b-32768"))
+    toolkit= SQLDatabaseToolkit(db=db, llm=ChatGroq(model="qwen-2.5-32b"))
     tools= toolkit.get_tools()
     get_schema_tool=next(tool for tool in tools if tool.name=="sql_db_schema")
     tables_with_schema=dict()
@@ -155,7 +155,7 @@ def general_chat(state: InputState) -> OutputState:
     pack.human=statement
     chat_instruction=NORMAL_INSTRUCTION.format(history=message_history)
     general_prompt=ChatPromptTemplate.from_messages([("system",chat_instruction),("placeholder","{messages}")])
-    general_task_llm=general_prompt|ChatGroq(model="mixtral-8x7b-32768")
+    general_task_llm=general_prompt|ChatGroq(model="llama-3.1-8b-instant")
     response=general_task_llm.invoke({"messages":[statement]})
     #print("response from general chat: ",response.human)
     #print("response from general chat: ",response.llm)
@@ -170,7 +170,7 @@ def is_related(state):
     #print(tables_info)
     #print(statement)
     category_deciding_instruction=SystemMessage(content=CATEGORY_DECIDING_PROMPT.format(statement=statement,tables_info=tables_info))
-    category_deciding_llm=ChatGroq(model="mixtral-8x7b-32768")
+    category_deciding_llm=ChatGroq(model="qwen-2.5-32b")
     response=category_deciding_llm.invoke([category_deciding_instruction])
     #print(response.content)
     if response.content.lower()=="sql" or "sql" in response.content.lower():
