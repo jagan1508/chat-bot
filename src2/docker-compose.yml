@@ -18,17 +18,50 @@ services:
       interval: 10s
       retries: 5
       start_period: 40s
-  chat-bot:
+  
+  
+  chat-bot-1:
     image: chat-bot:latest
-    container_name: test_chatbot
+    container_name: test_chatbot_1
     hostname: chatbot-server
     ports:
-      - "8000:8000"
+      - "8001:8000"
     networks:
       - backend
     depends_on:
       mysql:
         condition: service_healthy
+    
+  chat-bot-2:
+    image: chat-bot:latest
+    container_name: test_chatbot_2
+    hostname: chatbot-server
+    ports:
+      - "8002:8000"
+    networks:
+      - backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+  
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - chat-bot-1
+      - chat-bot-2
+    networks:
+      - backend 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "1"
+
 networks:
   backend:
     driver: bridge
