@@ -1,5 +1,5 @@
 document.getElementById("chat-form").addEventListener("submit", async function(event) {
-    event.preventDefault(); // Prevent form from reloading the page
+    event.preventDefault(); 
     
     const userInput = document.getElementById("user-input").value;
     const chatHistory = document.getElementById("chat-history");
@@ -10,10 +10,10 @@ document.getElementById("chat-form").addEventListener("submit", async function(e
     userMessage.textContent = `You: ${userInput}`;
     chatHistory.appendChild(userMessage);
     
-    document.getElementById("user-input").value = ""; // Clear input field
+    document.getElementById("user-input").value = ""; 
     
     try {
-        const response = await fetch("http://127.0.0.1:8000/ask", {
+        const response = await fetch("http://127.0.0.1/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: userInput })
@@ -23,7 +23,6 @@ document.getElementById("chat-form").addEventListener("submit", async function(e
         
         const data = await response.json();
         
-        // Append chatbot response
         const botMessage = document.createElement("div");
         botMessage.classList.add("message", "bot-message");
         botMessage.textContent = `Chatbot: ${data.answer}`;
@@ -35,5 +34,5 @@ document.getElementById("chat-form").addEventListener("submit", async function(e
         chatHistory.appendChild(errorMessage);
     }
     
-    chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll to latest message
+    chatHistory.scrollTop = chatHistory.scrollHeight; 
 });
