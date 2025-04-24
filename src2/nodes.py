@@ -26,7 +26,7 @@ def load_db(username : str, password: str, host: str, port : str ,database: str)
     #print(db.get_usable_table_names())
     return db
 
-db=load_db(username="root", password="jagan2911", host="localhost",port="3306",database="employeez")
+db=load_db(username="root", password="jagan2911", host="mysqlserver",port="3306",database="employeez")
 import ast
 def parse(tables):
     result=ast.literal_eval(tables)
@@ -42,7 +42,7 @@ def select_relevant_schemas(state: InputState) -> OverallState:
         state['max_attempts']=MAX_ATTEMPTS_DEFAULT
     table_names=db.get_usable_table_names()
     question= state['question']
-    toolkit= SQLDatabaseToolkit(db=db, llm=ChatGroq(model="qwen-2.5-32b"))
+    toolkit= SQLDatabaseToolkit(db=db, llm=ChatGroq(model="qwen-qwq-32b"))
     tools= toolkit.get_tools()
     get_schema_tool=next(tool for tool in tools if tool.name=="sql_db_schema")
     tables_with_schema=dict()
@@ -54,7 +54,7 @@ def select_relevant_schemas(state: InputState) -> OverallState:
     instruction=SystemMessage(content=SELECT_RELEVANT_TABLES_INSTRUCTION.format(table_names=table_names))
     prompt=[instruction]+[HumanMessage(content=question)]
     #print(prompt)
-    model=ChatGroq(model="qwen-2.5-32b")
+    model=ChatGroq(model="compound-beta")
     relevant_tables=model.invoke(prompt)
     #print("relevant tables ",relevant_tables.content)
     relevant_tables=parse(relevant_tables.content)
@@ -94,7 +94,7 @@ def generate_query(state: OverallState) -> OverallState:
     checker_prompt=([SystemMessage(content=QUERY_CHECK_INSTRUCTION)]+
                     [AIMessage(content=f"SQLite query: {generator_response.statement}\n Reasoning:{generator_response.reasoning}")]
                     )
-    checker_model=ChatGroq(model="llama-3.3-70b-specdec").with_structured_output(GenQueryResponse)
+    checker_model=ChatGroq(model="llama-3.3-70b-versatile").with_structured_output(GenQueryResponse)
     checker_response= checker_model.invoke(checker_prompt)
     
     corrected=generator_response.statement != checker_response.statement
@@ -143,7 +143,7 @@ def generate_answer(state: OverallState) -> OutputState:
         [HumanMessage(content=state["question"])]
     )
     
-    response= ChatGroq(model="qwen-2.5-32b").invoke(prompt)
+    response= ChatGroq(model="compound-beta").invoke(prompt)
     
     return {"answer":response.content}
 
@@ -170,7 +170,7 @@ def is_related(state):
     #print(tables_info)
     #print(statement)
     category_deciding_instruction=SystemMessage(content=CATEGORY_DECIDING_PROMPT.format(statement=statement,tables_info=tables_info))
-    category_deciding_llm=ChatGroq(model="qwen-2.5-32b")
+    category_deciding_llm=ChatGroq(model="gemma2-9b-it")
     response=category_deciding_llm.invoke([category_deciding_instruction])
     #print(response.content)
     if response.content.lower()=="sql" or "sql" in response.content.lower():

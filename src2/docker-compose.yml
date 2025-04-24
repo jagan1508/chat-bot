@@ -21,7 +21,7 @@ services:
   
   
   chat-bot-1:
-    image: chat-bot:latest
+    image: chatbot:latest
     container_name: test_chatbot_1
     hostname: chatbot-server
     ports:
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     
   chat-bot-2:
-    image: chat-bot:latest
+    image: chatbot:latest
     container_name: test_chatbot_2
     hostname: chatbot-server
     ports:

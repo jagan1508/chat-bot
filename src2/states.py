@@ -44,7 +44,7 @@ class OverallState(TypedDict):
     error_message: str
     tables_info: str =''
     reasoning: str
-    queries: Annotated[List[Query], operator.add]
+    queries: List[Query]
 
 class GenQueryResponse(BaseModel):
     statement: str= Field(description="Query statement to be executed")
